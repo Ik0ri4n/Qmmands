@@ -24,7 +24,13 @@ namespace Qmmands
         public Enum BucketType { get; }
 
         /// <summary>
-        ///     Initialises a new <see cref="CooldownAttribute"/> with the specified <see cref="Cooldown"/> properties.
+        ///     Gets whether to measure the <see cref="Cooldown"/> before or after the <see cref="Command"/> execution.
+        /// </summary>
+        public bool MeasuredBeforeExecution { get; }
+
+        /// <summary>
+        ///     Initialises a new <see cref="CooldownAttribute"/> with the specified <see cref="Cooldown"/> properties 
+        ///     and <see cref="MeasuredBeforeExecution"/> set to <see langword="true"/>.
         /// </summary>
         /// <param name="amount"> The amount of uses per given window. </param>
         /// <param name="per"> The bucket time window. </param>
@@ -34,6 +40,22 @@ namespace Qmmands
         ///     Not a valid cooldown measure.
         /// </exception>
         public CooldownAttribute(int amount, double per, CooldownMeasure cooldownMeasure, object bucketType)
+            : this(amount, per, cooldownMeasure, bucketType, true)
+        { }
+
+        /// <summary>
+        ///     Initialises a new <see cref="CooldownAttribute"/> with the specified <see cref="Cooldown"/> properties.
+        /// </summary>
+        /// <param name="amount"> The amount of uses per given window. </param>
+        /// <param name="per"> The bucket time window. </param>
+        /// <param name="cooldownMeasure"> The unit of time of the given window. </param>
+        /// <param name="bucketType"> The bucket type. Has to be an <see langword="enum"/>. </param>
+        /// <param name="measuredBeforeExecution"> Whether the <see cref="Cooldown"/> shall be measured before or after the 
+        ///     <see cref="Command"/> execution. </param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Not a valid cooldown measure.
+        /// </exception>
+        public CooldownAttribute(int amount, double per, CooldownMeasure cooldownMeasure, object bucketType, bool measuredBeforeExecution)
         {
             if (!(bucketType is Enum enumBucketType))
                 throw new ArgumentException("Bucket type must be an enum.", nameof(bucketType));
@@ -49,6 +71,7 @@ namespace Qmmands
                 _ => throw new ArgumentOutOfRangeException(nameof(cooldownMeasure), "Invalid cooldown measure."),
             };
             BucketType = enumBucketType;
+            MeasuredBeforeExecution = measuredBeforeExecution;
         }
     }
 }
