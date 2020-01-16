@@ -21,7 +21,8 @@ namespace Qmmands
         public Command Command { get; }
 
         /// <summary>
-        ///     Gets the <see cref="Cooldown"/>s and <see cref="TimeSpan"/>s after which it is safe to retry.
+        ///     Gets the <see cref="Cooldown"/>s and <see cref="TimeSpan"/>s after which it is safe to retry. 
+        ///     If RetryAfter is the default <see cref="TimeSpan"/> value the last call to the <see cref="Qmmands.Command"/> is still running.
         /// </summary>
         public IReadOnlyList<(Cooldown Cooldown, TimeSpan RetryAfter)> Cooldowns { get; }
 
