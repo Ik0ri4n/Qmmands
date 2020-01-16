@@ -282,6 +282,18 @@ namespace Qmmands
             return new SuccessfulResult();
         }
 
+        internal void PostProcessCooldowns(CommandContext context)
+        {
+            CooldownMap.Update();
+            var buckets = Cooldowns.Where(x => !x.MeasuredBeforeExecution).Select(x => CooldownMap.GetBucket(x, context)).ToArray();
+
+            for (var i = 0; i < buckets.Length; i++)
+            {
+                if (buckets[i].HoldsInformation)
+                    ((PostExecutionCooldownBucket) buckets[i])?.IncrementExecuted();
+            }
+        }
+
         /// <summary>
         ///     Attempts to parse the raw arguments for this <see cref="Command"/> and execute it.
         ///     Short for <see cref="CommandService.ExecuteAsync(Command, string, CommandContext)"/>
