@@ -17,12 +17,11 @@ namespace Qmmands
 
         public void Update()
         {
-            var now = DateTimeOffset.UtcNow;
             var buckets = _buckets.ToArray();
             for (var i = 0; i < buckets.Length; i++)
             {
                 var bucket = buckets[i];
-                if (now > bucket.Value.LastCall + bucket.Value.Cooldown.Per)
+                if (!bucket.Value.HoldsInformation)
                     _buckets.TryRemove(bucket.Key, out _);
             }
         }
@@ -33,7 +32,8 @@ namespace Qmmands
         public CooldownBucket GetBucket(Cooldown cooldown, CommandContext context)
         {
             var key = _command.Service.CooldownBucketKeyGenerator(cooldown.BucketType, context);
-            return key == null ? null : _buckets.GetOrAdd(key, new CooldownBucket(cooldown));
+            return key == null ? null : _buckets.GetOrAdd(key, cooldown.MeasuredBeforeExecution
+                ? new CooldownBucket(cooldown) : new PostExecutionCooldownBucket(cooldown));
         }
     }
 }
