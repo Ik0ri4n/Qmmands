@@ -1113,6 +1113,8 @@ namespace Qmmands
                         throw new InvalidOperationException("Unknown callback type.");
                 }
 
+                context.Command.PostProcessCooldowns(context);
+
                 if (result is CommandResult commandResult)
                     commandResult.Command = context.Command;
 
