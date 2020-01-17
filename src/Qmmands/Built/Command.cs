@@ -274,9 +274,6 @@ namespace Qmmands
 
                 if (rateLimited.Count > 0)
                     return new CommandOnCooldownResult(this, rateLimited.TryMoveToImmutable());
-
-                for (var i = 0; i < buckets.Length; i++)
-                    buckets[i]?.Decrement();
             }
 
             return new SuccessfulResult();
@@ -290,7 +287,7 @@ namespace Qmmands
             for (var i = 0; i < buckets.Length; i++)
             {
                 if (buckets[i].HoldsInformation)
-                    ((PostExecutionCooldownBucket) buckets[i])?.IncrementExecuted();
+                    ((PostExecutionCooldownBucket) buckets[i])?.DecrementPending();
             }
         }
 

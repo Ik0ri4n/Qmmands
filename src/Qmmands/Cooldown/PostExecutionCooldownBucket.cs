@@ -5,59 +5,79 @@ namespace Qmmands
 {
     internal sealed class PostExecutionCooldownBucket : CooldownBucket
     {
-        public int Executed => Volatile.Read(ref _executed);
-        private int _executed;
+        public int Pending => Volatile.Read(ref _pending);
+        private int _pending;
 
-        public override bool HoldsInformation => Remaining > Executed || base.HoldsInformation;
+        public override bool HoldsInformation => Remaining < Pending || base.HoldsInformation;
 
         public PostExecutionCooldownBucket(Cooldown cooldown)
             : base(cooldown)
         {
-            _executed = 0;
+            _pending = cooldown.Amount;
         }
 
         public override bool IsRateLimited(out TimeSpan retryAfter)
         {
             var now = DateTimeOffset.UtcNow;
 
-            if (Executed == 0)
-                Window = now;
-
-            if (now > Window + Cooldown.Per)
+            lock (_lock)
             {
-                _remaining = Cooldown.Amount;
-                _executed = 0;
-                Window = now;
-            }
+                if (Remaining != Cooldown.Amount && Remaining == Pending && now > Window + Cooldown.Per)
+                {
+                    _remaining = Cooldown.Amount;
+                    _pending = Cooldown.Amount;
+                }
 
-            if (Executed == Cooldown.Amount)
-            {
-                retryAfter = Cooldown.Per - (now - Window);
-                return true;
-            }
+                if (Pending == 0)
+                {
+                    retryAfter = Cooldown.Per - (now - Window);
+                    return true;
+                }
 
-            retryAfter = default;
-            return Remaining == 0;
+                retryAfter = default;
+
+                if (Remaining == 0)
+                    return true;
+
+                _remaining--;
+                return false;
+            }
         }
 
-        public override void Decrement()
-            => Interlocked.Decrement(ref _remaining);
-
-        public void IncrementExecuted()
+        public void DecrementPending()
         {
             var now = DateTimeOffset.UtcNow;
-            _lastCall = now;
 
-            Interlocked.Increment(ref _executed);
+            lock (_lock)
+            {
+                _lastCall = now;
 
-            if (Executed == Cooldown.Amount)
-                Window = now;
+                if (Pending == Cooldown.Amount)
+                    Window = now;
+
+                if (now > Window + Cooldown.Per)
+                {
+                    _remaining = Cooldown.Amount;
+                    _pending = Cooldown.Amount;
+                    Window = now;
+                }
+
+                _pending--;
+
+                if (Pending == 0)
+                    Window = now;
+            }
         }
 
         public override void Reset()
         {
-            base.Reset();
-            _executed = 0;
+            lock (_lock)
+            {
+                _remaining = Cooldown.Amount;
+                _pending = Cooldown.Amount;
+                _lastCall = default;
+                Window = default;
+            }
         }
     }
 }
