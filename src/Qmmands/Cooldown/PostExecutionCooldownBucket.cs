@@ -36,11 +36,15 @@ namespace Qmmands
 
                 retryAfter = default;
 
-                if (Remaining == 0)
-                    return true;
+                return Remaining == 0;
+            }
+        }
 
+        public override void Decrement()
+        {
+            lock (_lock)
+            {
                 _remaining--;
-                return false;
             }
         }
 

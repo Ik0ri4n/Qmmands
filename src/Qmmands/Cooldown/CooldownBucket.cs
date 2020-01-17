@@ -15,7 +15,7 @@ namespace Qmmands
         public virtual bool HoldsInformation => DateTimeOffset.UtcNow <= _lastCall + Cooldown.Per;
         protected DateTimeOffset _lastCall;
 
-        protected object _lock = new object();
+        protected readonly object _lock = new object();
 
         public CooldownBucket(Cooldown cooldown)
         {
@@ -46,13 +46,20 @@ namespace Qmmands
                     return true;
                 }
 
+                retryAfter = default;
+                return false;
+            }
+        }
+
+        public virtual void Decrement()
+        {
+            var now = DateTimeOffset.UtcNow;
+            lock (_lock)
+            {
                 _remaining--;
 
                 if (Remaining == 0)
                     Window = now;
-
-                retryAfter = default;
-                return false;
             }
         }
 
