@@ -78,6 +78,7 @@ namespace Qmmands
             Amount = amount;
             Per = per;
             BucketType = bucketType;
+            MeasuredBeforeExecution = measuredBeforeExecution;
         }
     }
 }
