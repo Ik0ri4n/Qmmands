@@ -1,29 +1,17 @@
 ﻿using System;
-using System.Threading;
 
 namespace Qmmands
 {
-    internal class CooldownBucket
+    internal sealed class CooldownBucket : CooldownBucketBase
     {
-        public Cooldown Cooldown { get; }
+        public DateTimeOffset Window { get; private set; }
 
-        public int Remaining => Volatile.Read(ref _remaining);
-        protected int _remaining;
+        public override bool HoldsInformation => DateTimeOffset.UtcNow <= _lastCall + Cooldown.Per;
+        private DateTimeOffset _lastCall;
 
-        public DateTimeOffset Window { get; protected set; }
+        public CooldownBucket(Cooldown cooldown) : base(cooldown) { }
 
-        public virtual bool HoldsInformation => DateTimeOffset.UtcNow <= _lastCall + Cooldown.Per;
-        protected DateTimeOffset _lastCall;
-
-        protected readonly object _lock = new object();
-
-        public CooldownBucket(Cooldown cooldown)
-        {
-            Cooldown = cooldown;
-            _remaining = Cooldown.Amount;
-        }
-
-        public virtual bool IsRateLimited(out TimeSpan retryAfter)
+        public override bool IsRateLimited(out TimeSpan retryAfter)
         {
             var now = DateTimeOffset.UtcNow;
 
@@ -51,7 +39,7 @@ namespace Qmmands
             }
         }
 
-        public virtual void Decrement()
+        public override void Decrement()
         {
             var now = DateTimeOffset.UtcNow;
             lock (_lock)
@@ -63,7 +51,7 @@ namespace Qmmands
             }
         }
 
-        public virtual void Reset()
+        public override void Reset()
         {
             lock (_lock)
             {

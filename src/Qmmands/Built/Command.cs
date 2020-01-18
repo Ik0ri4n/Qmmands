@@ -297,7 +297,7 @@ namespace Qmmands
                 for (var i = 0; i < buckets.Length; i++)
                 {
                     if (buckets[i].HoldsInformation)
-                        ((PostExecutionCooldownBucket) buckets[i])?.DecrementPending();
+                        ((CallCooldownBucketBase) buckets[i])?.DecrementPending();
                 }
             }
         }

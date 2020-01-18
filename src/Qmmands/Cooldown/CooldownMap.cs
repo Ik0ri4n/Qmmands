@@ -5,14 +5,14 @@ namespace Qmmands
 {
     internal sealed class CooldownMap
     {
-        private readonly ConcurrentDictionary<object, CooldownBucket> _buckets;
+        private readonly ConcurrentDictionary<object, CooldownBucketBase> _buckets;
 
         private readonly Command _command;
 
         internal CooldownMap(Command command)
         {
             _command = command;
-            _buckets = new ConcurrentDictionary<object, CooldownBucket>();
+            _buckets = new ConcurrentDictionary<object, CooldownBucketBase>();
         }
 
         public void Update()
@@ -29,11 +29,14 @@ namespace Qmmands
         public void Clear()
             => _buckets.Clear();
 
-        public CooldownBucket GetBucket(Cooldown cooldown, CommandContext context)
+        public CooldownBucketBase GetBucket(Cooldown cooldown, CommandContext context)
         {
             var key = _command.Service.CooldownBucketKeyGenerator(cooldown.BucketType, context);
             return key == null ? null : _buckets.GetOrAdd(key, cooldown.MeasuredBeforeExecution
-                ? new CooldownBucket(cooldown) : new PostExecutionCooldownBucket(cooldown));
+                ? new CooldownBucket(cooldown)
+                : cooldown.Per == TimeSpan.Zero
+                    ? new CallCooldownBucket(cooldown)
+                    : (CooldownBucketBase) new PostExecutionCooldownBucket(cooldown));
         }
     }
 }

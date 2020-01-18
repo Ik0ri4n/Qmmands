@@ -27,7 +27,11 @@ namespace Qmmands
         public IReadOnlyList<(Cooldown Cooldown, TimeSpan RetryAfter)> Cooldowns { get; }
 
         private static string GetRetryAddition(Cooldown cooldown, TimeSpan retryAfter)
-            => retryAfter != default ? retryAfter.ToString() : "its execution and " + cooldown.Per.ToString();
+            => retryAfter != default
+                ? retryAfter.ToString()
+                : cooldown.Per == TimeSpan.Zero
+                    ? "its execution"
+                    : "its execution and " + cooldown.Per.ToString();
 
         internal CommandOnCooldownResult(Command command, IReadOnlyList<(Cooldown Cooldown, TimeSpan RetryAfter)> cooldowns)
         {

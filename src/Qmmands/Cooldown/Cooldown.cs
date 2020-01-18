@@ -69,8 +69,16 @@ namespace Qmmands
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be a positive integer.");
 
-            if (per <= TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException(nameof(per), "Per must be a positive time span.");
+            if (measuredBeforeExecution)
+            {
+                if (per <= TimeSpan.Zero)
+                    throw new ArgumentOutOfRangeException(nameof(per), "Per must be a positive time span.");
+            }
+            else
+            {
+                if (per < TimeSpan.Zero)
+                    throw new ArgumentOutOfRangeException(nameof(per), "Per must be a positive or zero time span.");
+            }
 
             if (bucketType == null)
                 throw new ArgumentNullException(nameof(bucketType), "Bucket type must not be null.");

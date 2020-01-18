@@ -3,17 +3,17 @@ using System.Threading;
 
 namespace Qmmands
 {
-    internal sealed class PostExecutionCooldownBucket : CooldownBucket
+    internal sealed class PostExecutionCooldownBucket : CallCooldownBucketBase
     {
-        public int Pending => Volatile.Read(ref _pending);
-        private int _pending;
+        public DateTimeOffset Window { get; private set; }
 
-        public override bool HoldsInformation => Remaining < Pending || base.HoldsInformation;
+        public override bool HoldsInformation => Remaining < Pending || DateTimeOffset.UtcNow <= _lastCall + Cooldown.Per;
+        private DateTimeOffset _lastCall;
 
         public PostExecutionCooldownBucket(Cooldown cooldown)
             : base(cooldown)
         {
-            _pending = cooldown.Amount;
+            _pending = Cooldown.Amount;
         }
 
         public override bool IsRateLimited(out TimeSpan retryAfter)
@@ -48,7 +48,7 @@ namespace Qmmands
             }
         }
 
-        public void DecrementPending()
+        public override void DecrementPending()
         {
             var now = DateTimeOffset.UtcNow;
 
